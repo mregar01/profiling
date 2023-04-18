@@ -39,6 +39,7 @@ void conditionalMove(Seq_T registers, uint32_t word)
                 *(uint32_t*) Seq_get(registers, data.a) = 
                                 *(uint32_t*) Seq_get(registers, data.b);
         }
+        printf("here");
 }
 
 
