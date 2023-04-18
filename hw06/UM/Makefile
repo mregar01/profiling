@@ -15,7 +15,7 @@ IFLAGS = -I. -I/comp/40/build/include -I/usr/sup/cii40/include/cii
 # Compile flags
 # Set debugging information, allow the c99 standard,
 # max out warnings, and use the updated include path
-CFLAGS = -g -std=c99 -Wall -Wextra -Werror -Wfatal-errors -pedantic $(IFLAGS)
+CFLAGS = -g -O1 -std=c99 -Wall -Wextra -Werror -Wfatal-errors -pedantic $(IFLAGS)
 
 # Linking flags
 # Set debugging information and update linking path
@@ -25,7 +25,7 @@ LDFLAGS = -g -L/comp/40/build/lib -L/usr/sup/cii40/lib64
 # Libraries needed for linking
 # Both programs need cii40 (Hanson binaries) and *may* need -lm (math)
 # Only brightness requires the binary for pnmrdr.
-LDLIBS = -lbitpack -l40locality -larith40 -lpnmrdr -lcii40 -lm -lnetpbm
+LDLIBS = -lbitpack -lcii40-O1 -l40locality -larith40 -lpnmrdr -lm -lnetpbm
 
 # Collect all .h files in your directory.
 # This way, you can never forget to add
