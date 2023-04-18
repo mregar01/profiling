@@ -43,7 +43,6 @@ int main(int argc, char *argv[]){
         freeSegments(segments);
         freeSequence(registers);
         freeSequence(availability);
-        printf("hi");
         exit(0);
 }
 

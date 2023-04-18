@@ -44,7 +44,6 @@ Seq_T initializeSegments(char *filename)
         Seq_addhi(segments, segmentZero);
         fclose(fp);
         
-        printf("hi");
 
         return segments;
 }
