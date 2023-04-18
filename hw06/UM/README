@@ -1,0 +1,141 @@
+CS40 Homework 6: UM
+
+Written By: 
+        Max Regardie & Vir Bhatia
+
+Help Received:
+        TA Office Hours
+
+Implementation Success
+        All parts of the submission are correctly implemented in accordance 
+        with the homework spec.
+
+Design Departures 
+        The only notable departure from the initial design for this assignment 
+        was the decision to represent registers as Hansen Segments as opposed 
+        to C arrays. This was done in order to make it easier to pass the 
+        registers through to all of our functions. Also, we moved some of the 
+        memory functions around to promote modularity.
+
+Program Architecture
+        The program was split into the following four modules:
+                - Driver
+                - Basic Instructions
+                - Memory Instructions
+                - IO
+                
+        The Driver module initializes segment and register representations,
+        processes instructions, and calls on other modules to execute them and
+        edit the segments and registers.
+        
+        The Basic Instructions module has access to the program registers, and
+        when called by the driver, reads and edits them according to the 
+        instruction called by the client.        
+        
+        The Memory Instructions module has access to the program registers and 
+        segments, and when called by the driver, reads and edits them according 
+        to the instruction called by the client.
+
+        The IO Instructions module has access to the program registers, and
+        when called by the driver, handles input and output as called by the 
+        client.
+        
+
+– 50 million instructions
+
+        Midmark has 30,109 instructions and takes 7.4 seconds. So, by dividing
+        50,000,000/30,109 you get 1,660. 1,660 * 7.4 = 12,284 seconds, or
+        204 minutes.
+
+– Testing
+        - halt
+                This test checks the halt instruction. It does this by passing
+                in a halt and making sure memory is freed
+        - halt-verbose
+                This test checks the halt instruction. It does this by passing
+                in a halt and printing a message if the program fails to halt
+        - add
+                This test cheks the add instruction. We used this test
+                and then printed our registers to check that everything was
+                computed correctly
+        - add-output
+                This test cheks the add instruction and the output instruction.
+                We added numbers then output the registers to test
+        - load
+                This test checks the load value instruction. It does this by
+                loading a value into a register and outputting it. 
+        - cmov-true
+                This test checks the conditional move if c != 0. This test
+                works by loading values, performing a move, then outputting
+        - cmov-false
+                This test checks the conditional move if c != 0. This test
+                works by loading values, making sure there is no move, then
+                outputting
+        - mult
+                This test checks the multiply instruction and the output 
+                instruction. We multiplied numbers then output the registers 
+                to test
+        - div
+                This test checks the divide instruction and the output 
+                instruction. We divided numbers then output the registers 
+                to test
+        - div-0
+                This test checks the divide instruction and the output 
+                instruction. We divided a number by zero and made sure an 
+                exception was thrown
+        - div-floor
+                This test checks the divide instruction and the output 
+                instruction. We divided two non divisible numbers and made sure
+                the floor was outputted
+        - nand
+                This test checks the NAND instruction and the output 
+                instruction. We performed bitwise NAND on two values 
+                then output the registers to test
+        - input
+                This test checks the input instruction and the output 
+                instruction. We called input, and then outputted the register
+                to test whether the input and output values matched
+        - input-add
+                This test checks the input, add, and output instruction. We 
+                called input, added the read in value to another value, and
+                then outputted the registers to test
+        - map-basic
+                This test checks the map and load value instruction. We called 
+                loadval, then mapped the segments at the loaded indices and 
+                monitored valgrind output
+        - unmap-basic
+                This test checks the map, unmap, and load value instructions. 
+                We called loadval, then mapped the segment at the loaded index 
+                before unmapping the same segment and monitored valgrind output
+        - map-twice
+                This test checks the map, unmap, and load value instructions. 
+                We called loadval, then mapped the segments at the loaded 
+                indices. We then unmapped one of the freshly mappeed segments 
+                and mapped it once again. We monitored valgrind output 
+                throughout
+        - sload
+                This test checks the load value, map, segmented store, and
+                segmented load instructions. It performs a 
+                segmented store with loaded values and then a segmented load 
+                using the same values, before outputting the loaded register.
+        - sstore
+                This test checks the load value, map, segmented store, 
+                segmented load, and output instructions. It performs a 
+                segmented store with loaded values and then a segmented load 
+                using the same values, before outputting the loaded register.
+        -load-prog
+                This test checks the load value, input, conditional move, nand,
+                output, and halt instructions. It performs a series of basic
+                instructions before performing a load program and outputting
+                the registers to test.
+
+
+Time Spent on Assignment Analysis
+        5 hours
+
+Time Spent on Design Preparation
+        4 hours
+
+Time Spent on Post-Analysis Problem-Solving
+        16 hours
+
