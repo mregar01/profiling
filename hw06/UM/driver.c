@@ -124,7 +124,11 @@ void commandLoop(uint32_t *registers, Seq_T segments, Seq_T availability)
         for (int i = 0; i < size; i++) {
                 curr = Seq_get(zero->words, i);
                 /*unpack current opcode*/
-                opcode = Bitpack_getu(*curr, 4, 28);
+                // opcode = Bitpack_getu(*curr, 4, 28);
+                unsigned hi = 28 + 4; /* one beyond the most significant bit */
+
+                /* different type of right shift */
+                opcode = shr(shl(*curr, 64 - hi), 64 - 4);
                 if (opcode == CMOV) {
                         conditionalMove(registers, *curr);
                 } else if (opcode == SLOAD) {
