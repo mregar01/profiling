@@ -14,6 +14,10 @@
 #include "memory.h"
 
 #define NUMSEGMENTS 100
+#define WIDTH 3
+#define ALSB 6
+#define BLSB 3
+#define CLSB 0
 
 /**********initializeSegments********
  * takes in a filename, opens a file, initializes a sequence of segment structs
@@ -173,7 +177,11 @@ void segmentedStore(Seq_T registers, Seq_T segments, uint32_t word)
 void mapSegment(Seq_T registers, Seq_T segments, Seq_T availability, 
                 uint32_t word)
 {
-        struct values data = unpackWord(word);   
+        struct values data = unpackWord(word);
+
+        // struct values data;
+        // data.b = Bitpack_getu(word, WIDTH, BLSB);
+        // data.c = Bitpack_getu(word, WIDTH, CLSB); 
         uint32_t *cval = Seq_get(registers, data.c);
         Seq_T initial = Seq_new(*cval);
         
@@ -221,6 +229,9 @@ void unmapSegment(Seq_T registers, Seq_T segments, Seq_T availability,
                   uint32_t word)
 {
         struct values data = unpackWord(word);
+        // struct values data;
+        // data.b = Bitpack_getu(word, WIDTH, BLSB);
+        // data.c = Bitpack_getu(word, WIDTH, CLSB); 
         uint32_t *cval = Seq_get(registers, data.c);
         struct segment *currSegment = Seq_get(segments, *cval);
 
@@ -256,6 +267,9 @@ void unmapSegment(Seq_T registers, Seq_T segments, Seq_T availability,
 int loadProgram(Seq_T registers, Seq_T segments, uint32_t word)
 {
         struct values data = unpackWord(word);
+        // struct values data;
+        // data.b = Bitpack_getu(word, WIDTH, BLSB);
+        // data.c = Bitpack_getu(word, WIDTH, CLSB); 
         uint32_t *bval = Seq_get(registers, data.b);
         uint32_t *cval = Seq_get(registers, data.c);
         
