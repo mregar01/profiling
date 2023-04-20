@@ -32,14 +32,14 @@ void readWords(Seq_T sequence, FILE *fp);
 
 void freeSegments(Seq_T sequence);
 
-void segmentedLoad(Seq_T registers, Seq_T segments, uint32_t word);
+void segmentedLoad(uint32_t *registers, Seq_T segments, uint32_t word);
 
-void segmentedStore(Seq_T registers, Seq_T segments, uint32_t word);
+void segmentedStore(uint32_t *registers, Seq_T segments, uint32_t word);
 
-void mapSegment(Seq_T registers, Seq_T segments, Seq_T availability, 
+void mapSegment(uint32_t *registers, Seq_T segments, Seq_T availability, 
                 uint32_t word);
 
-void unmapSegment(Seq_T registers, Seq_T segments, Seq_T availability, 
+void unmapSegment(uint32_t *registers, Seq_T segments, Seq_T availability, 
                 uint32_t word);
 
-int loadProgram(Seq_T registers, Seq_T segments, uint32_t word);
+int loadProgram(uint32_t *registers, Seq_T segments, uint32_t word);

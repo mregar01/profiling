@@ -29,15 +29,17 @@
  * Expects: 
  * Notes: 
  ************************/
-void conditionalMove(Seq_T registers, uint32_t word)
+void conditionalMove(uint32_t* registers, uint32_t word)
 {
         struct values data = unpackWord(word);    
-        uint32_t *cval = Seq_get(registers, data.c); 
+        // uint32_t *cval = Seq_get(registers, data.c); 
+        uint32_t cval = registers[data.c];
 
         /* Checks if value in r[c] is 0 before executing move*/
-        if (*cval != 0) {
-                *(uint32_t*) Seq_get(registers, data.a) = 
-                                *(uint32_t*) Seq_get(registers, data.b);
+        if (cval != 0) {
+                // *(uint32_t*) Seq_get(registers, data.a) = 
+                //                 *(uint32_t*) Seq_get(registers, data.b);
+                registers[data.a] = registers[data.b];
         }
 }
 
@@ -52,16 +54,19 @@ void conditionalMove(Seq_T registers, uint32_t word)
  * Expects: 
  * Notes: 
  ************************/
-void addition(Seq_T registers, uint32_t word) 
+void addition(uint32_t* registers, uint32_t word) 
 {
         struct values data = unpackWord(word);    
-        uint32_t *bval = Seq_get(registers, data.b);
-        uint32_t *cval = Seq_get(registers, data.c);   
+        // uint32_t *bval = Seq_get(registers, data.b);
+        // uint32_t *cval = Seq_get(registers, data.c);   
+        uint32_t cval = registers[data.c];
+        uint32_t bval = registers[data.b];
 
         /* Adds values in two registers */
-        uint32_t result = (*bval + *cval) % MODVAL;
+        uint32_t result = (bval + cval) % MODVAL;
 
-        *(uint32_t*) Seq_get(registers, data.a) = result;
+        // *(uint32_t*) Seq_get(registers, data.a) = result;
+        registers[data.a] = result;
 }
 
 
@@ -75,16 +80,19 @@ void addition(Seq_T registers, uint32_t word)
  * Expects: 
  * Notes: 
  ************************/
-void multiplication(Seq_T registers, uint32_t word)
+void multiplication(uint32_t* registers, uint32_t word)
 {
         struct values data = unpackWord(word);    
-        uint32_t *bval = Seq_get(registers, data.b);
-        uint32_t *cval = Seq_get(registers, data.c);  
+        // uint32_t *bval = Seq_get(registers, data.b);
+        // uint32_t *cval = Seq_get(registers, data.c);  
+        uint32_t cval = registers[data.c];
+        uint32_t bval = registers[data.b];
 
         /* Multiplies values in two registers */                      
-        uint32_t result = (*bval * *cval) % MODVAL;
+        uint32_t result = (bval * cval) % MODVAL;
 
-        *(uint32_t*) Seq_get(registers, data.a) = result;
+        // *(uint32_t*) Seq_get(registers, data.a) = result;
+        registers[data.a] = result;
 }
 
 
@@ -97,19 +105,23 @@ void multiplication(Seq_T registers, uint32_t word)
  * Expects: The value in $r[C] to not be zero
  * Notes: 
  ************************/
-void division(Seq_T registers, uint32_t word) 
+void division(uint32_t* registers, uint32_t word) 
 {
         struct values data = unpackWord(word);    
-        uint32_t *bval = Seq_get(registers, data.b);
-        uint32_t *cval = Seq_get(registers, data.c);    
+        // uint32_t *bval = Seq_get(registers, data.b);
+        // uint32_t *cval = Seq_get(registers, data.c); 
+        uint32_t cval = registers[data.c];
+        uint32_t bval = registers[data.b];   
 
         /* Prevents division by zero */
-        assert(*cval != 0);   
+        assert(cval != 0);   
 
         /* Divides values in two registers */                 
-        uint32_t result = (*bval / *cval);
+        uint32_t result = (bval / cval);
 
-        *(uint32_t*) Seq_get(registers, data.a) = result;
+        // *(uint32_t*) Seq_get(registers, data.a) = result;
+        registers[data.a] = result;
+
 }
 
 
@@ -122,16 +134,20 @@ void division(Seq_T registers, uint32_t word)
  * Expects: 
  * Notes: 
  ************************/
-void BitwiseNAND(Seq_T registers, uint32_t word)
+void BitwiseNAND(uint32_t* registers, uint32_t word)
 {
         struct values data = unpackWord(word);    
-        uint32_t *bval = Seq_get(registers, data.b);
-        uint32_t *cval = Seq_get(registers, data.c);                      
+        // uint32_t *bval = Seq_get(registers, data.b);
+        // uint32_t *cval = Seq_get(registers, data.c);       
+        uint32_t cval = registers[data.c];
+        uint32_t bval = registers[data.b];               
         
         /* Performs bitwise NAND on values in two registers */
-        uint32_t result = ~(*bval & *cval);
+        uint32_t result = ~(bval & cval);
 
-        *(uint32_t*) Seq_get(registers, data.a) = result;
+        // *(uint32_t*) Seq_get(registers, data.a) = result;
+        registers[data.a] = result;
+
 }
 
 
@@ -145,12 +161,14 @@ void BitwiseNAND(Seq_T registers, uint32_t word)
  * Expects: 
  * Notes: 
  ************************/
-void loadValue(Seq_T registers, uint32_t word)
+void loadValue(uint32_t* registers, uint32_t word)
 {
         uint32_t aval =  Bitpack_getu(word, WIDTH, 25);
         uint32_t loadval = Bitpack_getu(word, LVWIDTH, 0);
         
-        *(uint32_t*) Seq_get(registers, aval) = loadval;
+        // *(uint32_t*) Seq_get(registers, aval) = loadval;
+        registers[aval] = loadval;
+
 }
 
 

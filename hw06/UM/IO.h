@@ -16,6 +16,6 @@
 #include <seq.h>
 #include <bitpack.h>
 
-void input(Seq_T registers, uint32_t word);
+void input(uint32_t* registers, uint32_t word);
 
-void output(Seq_T registers, uint32_t word);
+void output(uint32_t* registers, uint32_t word);

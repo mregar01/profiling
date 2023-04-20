@@ -27,4 +27,4 @@ void printRegisters(Seq_T sequence);
 
 void freeSequence(Seq_T sequence);
 
-void commandLoop(Seq_T registers, Seq_T segments, Seq_T availability);
+void commandLoop(uint32_t* registers, Seq_T segments, Seq_T availability);

@@ -25,16 +25,16 @@ struct values {
         uint32_t c;
 };
 
-void conditionalMove(Seq_T registers, uint32_t word);
+void conditionalMove(uint32_t* registers, uint32_t word);
 
-void addition(Seq_T registers, uint32_t word);
+void addition(uint32_t* registers, uint32_t word);
 
-void multiplication(Seq_T registers, uint32_t word);
+void multiplication(uint32_t* registers, uint32_t word);
 
-void division(Seq_T registers, uint32_t word);
+void division(uint32_t* registers, uint32_t word);
 
-void BitwiseNAND(Seq_T registers, uint32_t word);
+void BitwiseNAND(uint32_t* registers, uint32_t word);
 
-void loadValue(Seq_T registers, uint32_t word);
+void loadValue(uint32_t* registers, uint32_t word);
 
 struct values unpackWord(uint32_t word);

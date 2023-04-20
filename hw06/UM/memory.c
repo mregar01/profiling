@@ -125,17 +125,21 @@ void freeSegments(Seq_T sequence)
  * Expects: segment location to be mapped and in bounds
  * Notes: 
  ************************/
-void segmentedLoad(Seq_T registers, Seq_T segments, uint32_t word)
+void segmentedLoad(uint32_t *registers, Seq_T segments, uint32_t word)
 {
         struct values data = unpackWord(word);
-        uint32_t *bval = Seq_get(registers, data.b);
-        uint32_t *cval = Seq_get(registers, data.c);
+        // uint32_t *bval = Seq_get(registers, data.b);
+        // uint32_t *cval = Seq_get(registers, data.c);
+        uint32_t cval = registers[data.c];
+        uint32_t bval = registers[data.b];
 
-        struct segment *currSegment = Seq_get(segments, *bval);
+        struct segment *currSegment = Seq_get(segments, bval);
         
         /*assigns $r[A] value in memory*/
-        *(uint32_t*) Seq_get(registers, data.a) = 
-                        *(uint32_t*) Seq_get(currSegment->words, *cval);
+        // *(uint32_t*) Seq_get(registers, data.a) = 
+        //                 *(uint32_t*) Seq_get(currSegment->words, *cval);
+                        
+        registers[data.a] = *(uint32_t*) Seq_get(currSegment->words, cval);
 }
 
 /**********SegmentedStore********
@@ -148,16 +152,20 @@ void segmentedLoad(Seq_T registers, Seq_T segments, uint32_t word)
  * Expects: segment location to be mapped and in bounds
  * Notes: 
  ************************/
-void segmentedStore(Seq_T registers, Seq_T segments, uint32_t word)
+void segmentedStore(uint32_t *registers, Seq_T segments, uint32_t word)
 {
         struct values data = unpackWord(word);
-        uint32_t *aval = Seq_get(registers, data.a);
-        uint32_t *bval = Seq_get(registers, data.b);
-        uint32_t *cval = Seq_get(registers, data.c);
+        // uint32_t *aval = Seq_get(registers, data.a);
+        // uint32_t *bval = Seq_get(registers, data.b);
+        // uint32_t *cval = Seq_get(registers, data.c);
+        uint32_t cval = registers[data.c];
+        uint32_t bval = registers[data.b];
+        uint32_t aval = registers[data.a];
 
-        struct segment *currSegment = Seq_get(segments, *aval);
+        struct segment *currSegment = Seq_get(segments, aval);
         /*assigns value in memory to $r[C]*/
-        *(uint32_t*) Seq_get(currSegment->words, *bval) = *(uint32_t*) cval;
+        *(uint32_t*) Seq_get(currSegment->words, bval) = cval;
+
 
 }
 
@@ -174,7 +182,7 @@ void segmentedStore(Seq_T registers, Seq_T segments, uint32_t word)
  * Expects: 
  * Notes: 
  ************************/
-void mapSegment(Seq_T registers, Seq_T segments, Seq_T availability, 
+void mapSegment(uint32_t *registers, Seq_T segments, Seq_T availability, 
                 uint32_t word)
 {
         struct values data = unpackWord(word);
@@ -182,11 +190,13 @@ void mapSegment(Seq_T registers, Seq_T segments, Seq_T availability,
         // struct values data;
         // data.b = Bitpack_getu(word, WIDTH, BLSB);
         // data.c = Bitpack_getu(word, WIDTH, CLSB); 
-        uint32_t *cval = Seq_get(registers, data.c);
-        Seq_T initial = Seq_new(*cval);
+        // uint32_t *cval = Seq_get(registers, data.c);
+        uint32_t cval = registers[data.c];
+        // uint32_t bval = *registers[data.b];
+        Seq_T initial = Seq_new(cval);
         
         /*makes a new empty segment*/
-        for (uint32_t i = 0; i < *cval; i++) {
+        for (uint32_t i = 0; i < cval; i++) {
                 uint32_t *curr = malloc(sizeof(uint32_t));
                 *curr = 0;
                 Seq_addhi(initial, curr);
@@ -204,13 +214,16 @@ void mapSegment(Seq_T registers, Seq_T segments, Seq_T availability,
                 free(Seq_remlo(availability));
                 struct segment *oldval = Seq_put(segments, index, newSegment);
                 free(oldval);
-                *(uint32_t*) Seq_get(registers, data.b) = index;
+                // *(uint32_t*) Seq_get(registers, data.b) = index;
+                registers[data.b] = index;
         }
         else {
                 /*if there is no unmapped spot*/
                 Seq_addhi(segments, newSegment);
-                *(uint32_t*) Seq_get(registers, data.b) = 
-                                                (Seq_length(segments) - 1);
+                // *(uint32_t*) Seq_get(registers, data.b) = 
+                //                                 (Seq_length(segments) - 1);
+
+                registers[data.b] = (Seq_length(segments) - 1);
         }
 }
 
@@ -225,15 +238,17 @@ void mapSegment(Seq_T registers, Seq_T segments, Seq_T availability,
  * Expects: given segment to be mapped and not zero
  * Notes: 
  ************************/
-void unmapSegment(Seq_T registers, Seq_T segments, Seq_T availability,
+void unmapSegment(uint32_t *registers, Seq_T segments, Seq_T availability,
                   uint32_t word)
 {
         struct values data = unpackWord(word);
         // struct values data;
         // data.b = Bitpack_getu(word, WIDTH, BLSB);
         // data.c = Bitpack_getu(word, WIDTH, CLSB); 
-        uint32_t *cval = Seq_get(registers, data.c);
-        struct segment *currSegment = Seq_get(segments, *cval);
+        // uint32_t *cval = Seq_get(registers, data.c);
+        uint32_t cval = registers[data.c];
+        // uint32_t bval = *registers[data.b];
+        struct segment *currSegment = Seq_get(segments, cval);
 
         int segmentlength = Seq_length(currSegment->words);
 
@@ -248,7 +263,7 @@ void unmapSegment(Seq_T registers, Seq_T segments, Seq_T availability,
 
         /*adds unmapped slot to availability sequence*/
         uint32_t *slot = malloc(sizeof(uint32_t));
-        *slot = *cval;
+        *slot = cval;
         Seq_addhi(availability, slot);
 }
 
@@ -264,19 +279,21 @@ void unmapSegment(Seq_T registers, Seq_T segments, Seq_T availability,
  * Expects: given segment to be mapped
  * Notes: 
  ************************/
-int loadProgram(Seq_T registers, Seq_T segments, uint32_t word)
+int loadProgram(uint32_t *registers, Seq_T segments, uint32_t word)
 {
         struct values data = unpackWord(word);
         // struct values data;
         // data.b = Bitpack_getu(word, WIDTH, BLSB);
         // data.c = Bitpack_getu(word, WIDTH, CLSB); 
-        uint32_t *bval = Seq_get(registers, data.b);
-        uint32_t *cval = Seq_get(registers, data.c);
+        // uint32_t *bval = Seq_get(registers, data.b);
+        // uint32_t *cval = Seq_get(registers, data.c);
+        uint32_t cval = registers[data.c];
+        uint32_t bval = registers[data.b];
         
         /*checks if it is just jumping within segment 0*/
-        if (*bval != 0) {
+        if (bval != 0) {
 
-                struct segment* currSegment = Seq_get(segments, *bval);
+                struct segment* currSegment = Seq_get(segments, bval);
                 int segmentlength = Seq_length(currSegment->words);
                 Seq_T newSegmentZero = Seq_new(segmentlength);
                 
@@ -296,5 +313,5 @@ int loadProgram(Seq_T registers, Seq_T segments, uint32_t word)
 
                 oldZero->words = newSegmentZero;
         }
-        return *cval - 1;
+        return cval - 1;
 }

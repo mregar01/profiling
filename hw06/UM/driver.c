@@ -31,7 +31,8 @@ int main(int argc, char *argv[]){
         }
         
         /*initialize all registers, segments, and availabilty sequences*/
-        Seq_T registers = initializeRegisters();
+        // Seq_T registers = initializeRegisters();
+        uint32_t *registers = calloc(NUMREGISTERS, sizeof(uint32_t));
         Seq_T segments = initializeSegments(argv[1]);
         /*this sequence stores the slots in the segments sequence that
         have been unmapped and can now be mapped on*/
@@ -41,7 +42,8 @@ int main(int argc, char *argv[]){
         
         /*frees all allocated memory*/
         freeSegments(segments);
-        freeSequence(registers);
+        free(registers);
+        // freeSequence(registers);
         freeSequence(availability);
         exit(0);
 }
@@ -113,7 +115,7 @@ void freeSequence(Seq_T sequence)
  * Expects: 
  * Notes: 
  ************************/
-void commandLoop(Seq_T registers, Seq_T segments, Seq_T availability)
+void commandLoop(uint32_t *registers, Seq_T segments, Seq_T availability)
 {
         struct segment *zero = Seq_get(segments, 0);
         int size = Seq_length(zero->words);

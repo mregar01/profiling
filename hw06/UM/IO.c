@@ -26,7 +26,7 @@
  * Notes: If I/O device is at the end of input $r[C] is loaded with a 32 bit 
  * word of all ones
  ************************/
-void input(Seq_T registers, uint32_t word) {
+void input(uint32_t* registers, uint32_t word) {
         
         char c = getchar();
 
@@ -36,9 +36,11 @@ void input(Seq_T registers, uint32_t word) {
 
         int cval = Bitpack_getu(word, CWIDTH, 0);
 
-        uint32_t *curr = Seq_get(registers, cval);
-        *curr = c;
-        Seq_put(registers, cval, curr);
+        // uint32_t *curr = Seq_get(registers, cval);
+
+        // *curr = c;
+        // Seq_put(registers, cval, curr);
+        registers[cval] = c;
 
 }
 
@@ -54,12 +56,14 @@ void input(Seq_T registers, uint32_t word) {
  * Notes: Function only outputs values from 0-255
  ************************/
 
-void output(Seq_T registers, uint32_t word) {
+void output(uint32_t* registers, uint32_t word) {
         
         int cval = Bitpack_getu(word, CWIDTH, 0);
-        uint32_t *value = Seq_get(registers, cval);
+        // uint32_t *value = Seq_get(registers, cval);
+        // uint32_t *value = regis
 
-        char c = *value;
+        char c = registers[cval];
+        // char c = *value;
         assert(c > MINVAL);
         putchar(c);
 }
