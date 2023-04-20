@@ -38,3 +38,7 @@ void BitwiseNAND(uint32_t* registers, uint32_t word);
 void loadValue(uint32_t* registers, uint32_t word);
 
 struct values unpackWord(uint32_t word);
+
+uint64_t shl(uint64_t word, unsigned bits);
+
+uint64_t shr(uint64_t word, unsigned bits);

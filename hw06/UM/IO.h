@@ -15,7 +15,12 @@
 #include <assert.h>
 #include <seq.h>
 #include <bitpack.h>
+// #include "basicInstructions.h"
 
 void input(uint32_t* registers, uint32_t word);
 
 void output(uint32_t* registers, uint32_t word);
+
+uint64_t shlio(uint64_t word, unsigned bits);
+
+uint64_t shrio(uint64_t word, unsigned bits);

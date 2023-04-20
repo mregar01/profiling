@@ -34,7 +34,17 @@ void input(uint32_t* registers, uint32_t word) {
                 c = ~0;
         } 
 
-        int cval = Bitpack_getu(word, CWIDTH, 0);
+        // int cval = Bitpack_getu(word, CWIDTH, 0);
+
+        // assert(CWIDTH <= 64);
+        
+        unsigned hi = 0 + CWIDTH; /* one beyond the most significant bit */
+        assert(hi <= 64);
+        /* different type of right shift */
+        int cval = shrio(shlio(word, 64 - hi), 64 - CWIDTH);
+
+
+
 
         // uint32_t *curr = Seq_get(registers, cval);
 
@@ -58,7 +68,16 @@ void input(uint32_t* registers, uint32_t word) {
 
 void output(uint32_t* registers, uint32_t word) {
         
-        int cval = Bitpack_getu(word, CWIDTH, 0);
+        // int cval = Bitpack_getu(word, CWIDTH, 0);
+
+
+        unsigned hi = 0 + CWIDTH; /* one beyond the most significant bit */
+        // assert(hi <= 64);
+        /* different type of right shift */
+        int cval = shrio(shlio(word, 64 - hi), 64 - CWIDTH);
+
+
+
         // uint32_t *value = Seq_get(registers, cval);
         // uint32_t *value = regis
 
@@ -66,4 +85,25 @@ void output(uint32_t* registers, uint32_t word) {
         // char c = *value;
         assert(c > MINVAL);
         putchar(c);
+}
+
+uint64_t shlio(uint64_t word, unsigned bits)
+{
+        // assert(bits <= 64);
+        if (bits == 64)
+                return 0;
+        else
+                return word << bits;
+}
+
+/*
+ * shift R logical
+ */
+uint64_t shrio(uint64_t word, unsigned bits)
+{
+        // assert(bits <= 64);
+        if (bits == 64)
+                return 0;
+        else
+                return word >> bits;
 }

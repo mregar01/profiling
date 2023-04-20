@@ -127,7 +127,26 @@ void freeSegments(Seq_T sequence)
  ************************/
 void segmentedLoad(uint32_t *registers, Seq_T segments, uint32_t word)
 {
-        struct values data = unpackWord(word);
+        // struct values data = unpackWord(word);
+        struct values data;
+
+        
+        unsigned hi = BLSB + WIDTH; /* one beyond the most significant bit */
+
+        /* different type of right shift */
+        data.b = shr(shl(word, 64 - hi), 64 - WIDTH);
+
+        hi = CLSB + WIDTH; /* one beyond the most significant bit */
+
+        /* different type of right shift */
+        data.c = shr(shl(word, 64 - hi), 64 - WIDTH);
+
+        hi = ALSB + WIDTH; /* one beyond the most significant bit */
+
+
+
+        /* different type of right shift */
+        data.a = shr(shl(word, 64 - hi), 64 - WIDTH);
         // uint32_t *bval = Seq_get(registers, data.b);
         // uint32_t *cval = Seq_get(registers, data.c);
         uint32_t cval = registers[data.c];
@@ -154,10 +173,29 @@ void segmentedLoad(uint32_t *registers, Seq_T segments, uint32_t word)
  ************************/
 void segmentedStore(uint32_t *registers, Seq_T segments, uint32_t word)
 {
-        struct values data = unpackWord(word);
-        // uint32_t *aval = Seq_get(registers, data.a);
-        // uint32_t *bval = Seq_get(registers, data.b);
-        // uint32_t *cval = Seq_get(registers, data.c);
+        // struct values data = unpackWord(word);
+        // // uint32_t *aval = Seq_get(registers, data.a);
+        // // uint32_t *bval = Seq_get(registers, data.b);
+        // // uint32_t *cval = Seq_get(registers, data.c);
+
+        struct values data;
+
+        
+        unsigned hi = BLSB + WIDTH; /* one beyond the most significant bit */
+
+        /* different type of right shift */
+        data.b = shr(shl(word, 64 - hi), 64 - WIDTH);
+
+        hi = CLSB + WIDTH; /* one beyond the most significant bit */
+
+        /* different type of right shift */
+        data.c = shr(shl(word, 64 - hi), 64 - WIDTH);
+
+        hi = ALSB + WIDTH; /* one beyond the most significant bit */
+
+        /* different type of right shift */
+        data.a = shr(shl(word, 64 - hi), 64 - WIDTH);
+
         uint32_t cval = registers[data.c];
         uint32_t bval = registers[data.b];
         uint32_t aval = registers[data.a];
@@ -185,7 +223,19 @@ void segmentedStore(uint32_t *registers, Seq_T segments, uint32_t word)
 void mapSegment(uint32_t *registers, Seq_T segments, Seq_T availability, 
                 uint32_t word)
 {
-        struct values data = unpackWord(word);
+        // struct values data = unpackWord(word);
+
+
+        struct values data;
+        
+        unsigned hi = BLSB + WIDTH; /* one beyond the most significant bit */
+        /* different type of right shift */
+        data.b = shr(shl(word, 64 - hi), 64 - WIDTH);
+
+        hi = CLSB + WIDTH; /* one beyond the most significant bit */
+
+        /* different type of right shift */
+        data.c = shr(shl(word, 64 - hi), 64 - WIDTH);
 
         // struct values data;
         // data.b = Bitpack_getu(word, WIDTH, BLSB);
@@ -241,12 +291,19 @@ void mapSegment(uint32_t *registers, Seq_T segments, Seq_T availability,
 void unmapSegment(uint32_t *registers, Seq_T segments, Seq_T availability,
                   uint32_t word)
 {
-        struct values data = unpackWord(word);
+        // struct values data = unpackWord(word);
         // struct values data;
         // data.b = Bitpack_getu(word, WIDTH, BLSB);
         // data.c = Bitpack_getu(word, WIDTH, CLSB); 
         // uint32_t *cval = Seq_get(registers, data.c);
-        uint32_t cval = registers[data.c];
+        
+
+        unsigned hi = CLSB + WIDTH; /* one beyond the most significant bit */
+
+        /* different type of right shift */
+        uint32_t clocation = shr(shl(word, 64 - hi), 64 - WIDTH);
+
+        uint32_t cval = registers[clocation];
         // uint32_t bval = *registers[data.b];
         struct segment *currSegment = Seq_get(segments, cval);
 
@@ -281,7 +338,18 @@ void unmapSegment(uint32_t *registers, Seq_T segments, Seq_T availability,
  ************************/
 int loadProgram(uint32_t *registers, Seq_T segments, uint32_t word)
 {
-        struct values data = unpackWord(word);
+        // struct values data = unpackWord(word);
+
+        struct values data;
+        
+        unsigned hi = BLSB + WIDTH; /* one beyond the most significant bit */
+        /* different type of right shift */
+        data.b = shr(shl(word, 64 - hi), 64 - WIDTH);
+
+        hi = CLSB + WIDTH; /* one beyond the most significant bit */
+        /* different type of right shift */
+        data.c = shr(shl(word, 64 - hi), 64 - WIDTH);
+
         // struct values data;
         // data.b = Bitpack_getu(word, WIDTH, BLSB);
         // data.c = Bitpack_getu(word, WIDTH, CLSB); 

@@ -31,9 +31,34 @@
  ************************/
 void conditionalMove(uint32_t* registers, uint32_t word)
 {
-        struct values data = unpackWord(word);    
+        struct values data;    
+
+
+        
+        unsigned hi = ALSB + WIDTH; /* one beyond the most significant bit */
+
+        /* different type of right shift */
+        data.a = shr(shl(word, 64 - hi), 64 - WIDTH);
+
+        hi = BLSB + WIDTH; /* one beyond the most significant bit */
+
+        /* different type of right shift */
+        data.b = shr(shl(word, 64 - hi), 64 - WIDTH);
+
+        hi = CLSB + WIDTH; /* one beyond the most significant bit */
+
+        /* different type of right shift */
+        data.c = shr(shl(word, 64 - hi), 64 - WIDTH);
+
+
         // uint32_t *cval = Seq_get(registers, data.c); 
         uint32_t cval = registers[data.c];
+
+        
+       
+
+
+
 
         /* Checks if value in r[c] is 0 before executing move*/
         if (cval != 0) {
@@ -56,9 +81,29 @@ void conditionalMove(uint32_t* registers, uint32_t word)
  ************************/
 void addition(uint32_t* registers, uint32_t word) 
 {
-        struct values data = unpackWord(word);    
+        // struct values data = unpackWord(word);    
         // uint32_t *bval = Seq_get(registers, data.b);
-        // uint32_t *cval = Seq_get(registers, data.c);   
+        // uint32_t *cval = Seq_get(registers, data.c); 
+        
+        struct values data;    
+
+
+        
+        unsigned hi = ALSB + WIDTH; /* one beyond the most significant bit */
+
+        /* different type of right shift */
+        data.a = shr(shl(word, 64 - hi), 64 - WIDTH);
+
+        hi = BLSB + WIDTH; /* one beyond the most significant bit */
+
+        /* different type of right shift */
+        data.b = shr(shl(word, 64 - hi), 64 - WIDTH);
+
+        hi = CLSB + WIDTH; /* one beyond the most significant bit */
+
+        /* different type of right shift */
+        data.c = shr(shl(word, 64 - hi), 64 - WIDTH);
+          
         uint32_t cval = registers[data.c];
         uint32_t bval = registers[data.b];
 
@@ -82,9 +127,29 @@ void addition(uint32_t* registers, uint32_t word)
  ************************/
 void multiplication(uint32_t* registers, uint32_t word)
 {
-        struct values data = unpackWord(word);    
+        // struct values data = unpackWord(word);    
         // uint32_t *bval = Seq_get(registers, data.b);
         // uint32_t *cval = Seq_get(registers, data.c);  
+
+        struct values data;    
+
+
+        
+        unsigned hi = ALSB + WIDTH; /* one beyond the most significant bit */
+
+        /* different type of right shift */
+        data.a = shr(shl(word, 64 - hi), 64 - WIDTH);
+
+        hi = BLSB + WIDTH; /* one beyond the most significant bit */
+
+        /* different type of right shift */
+        data.b = shr(shl(word, 64 - hi), 64 - WIDTH);
+
+        hi = CLSB + WIDTH; /* one beyond the most significant bit */
+
+        /* different type of right shift */
+        data.c = shr(shl(word, 64 - hi), 64 - WIDTH);
+
         uint32_t cval = registers[data.c];
         uint32_t bval = registers[data.b];
 
@@ -107,9 +172,29 @@ void multiplication(uint32_t* registers, uint32_t word)
  ************************/
 void division(uint32_t* registers, uint32_t word) 
 {
-        struct values data = unpackWord(word);    
+        // struct values data = unpackWord(word);    
         // uint32_t *bval = Seq_get(registers, data.b);
         // uint32_t *cval = Seq_get(registers, data.c); 
+
+        struct values data;    
+
+
+        
+        unsigned hi = ALSB + WIDTH; /* one beyond the most significant bit */
+
+        /* different type of right shift */
+        data.a = shr(shl(word, 64 - hi), 64 - WIDTH);
+
+        hi = BLSB + WIDTH; /* one beyond the most significant bit */
+
+        /* different type of right shift */
+        data.b = shr(shl(word, 64 - hi), 64 - WIDTH);
+
+        hi = CLSB + WIDTH; /* one beyond the most significant bit */
+
+        /* different type of right shift */
+        data.c = shr(shl(word, 64 - hi), 64 - WIDTH);
+
         uint32_t cval = registers[data.c];
         uint32_t bval = registers[data.b];   
 
@@ -136,9 +221,28 @@ void division(uint32_t* registers, uint32_t word)
  ************************/
 void BitwiseNAND(uint32_t* registers, uint32_t word)
 {
-        struct values data = unpackWord(word);    
+        // struct values data = unpackWord(word);    
         // uint32_t *bval = Seq_get(registers, data.b);
-        // uint32_t *cval = Seq_get(registers, data.c);       
+        // uint32_t *cval = Seq_get(registers, data.c);  
+
+        struct values data;    
+
+
+        
+        unsigned hi = ALSB + WIDTH; /* one beyond the most significant bit */
+
+        /* different type of right shift */
+        data.a = shr(shl(word, 64 - hi), 64 - WIDTH);
+
+        hi = BLSB + WIDTH; /* one beyond the most significant bit */
+
+        /* different type of right shift */
+        data.b = shr(shl(word, 64 - hi), 64 - WIDTH);
+
+        hi = CLSB + WIDTH; /* one beyond the most significant bit */
+
+        /* different type of right shift */
+        data.c = shr(shl(word, 64 - hi), 64 - WIDTH);     
         uint32_t cval = registers[data.c];
         uint32_t bval = registers[data.b];               
         
@@ -163,8 +267,21 @@ void BitwiseNAND(uint32_t* registers, uint32_t word)
  ************************/
 void loadValue(uint32_t* registers, uint32_t word)
 {
-        uint32_t aval =  Bitpack_getu(word, WIDTH, 25);
-        uint32_t loadval = Bitpack_getu(word, LVWIDTH, 0);
+        // uint32_t aval =  Bitpack_getu(word, WIDTH, 25);
+        // uint32_t loadval = Bitpack_getu(word, LVWIDTH, 0);
+        
+
+        
+        unsigned hi = 25 + WIDTH; /* one beyond the most significant bit */
+
+        /* different type of right shift */
+        uint32_t aval = shr(shl(word, 64 - hi), 64 - WIDTH);
+
+        hi = 0 + LVWIDTH; /* one beyond the most significant bit */
+
+        /* different type of right shift */
+        uint32_t loadval = shr(shl(word, 64 - hi), 64 - LVWIDTH);
+
         
         // *(uint32_t*) Seq_get(registers, aval) = loadval;
         registers[aval] = loadval;
@@ -189,4 +306,25 @@ struct values unpackWord(uint32_t word)
         final.b = Bitpack_getu(word, WIDTH, BLSB);
         final.c = Bitpack_getu(word, WIDTH, CLSB);
         return final;
+}
+
+uint64_t shl(uint64_t word, unsigned bits)
+{
+        // assert(bits <= 64);
+        if (bits == 64)
+                return 0;
+        else
+                return word << bits;
+}
+
+/*
+ * shift R logical
+ */
+uint64_t shr(uint64_t word, unsigned bits)
+{
+        // assert(bits <= 64);
+        if (bits == 64)
+                return 0;
+        else
+                return word >> bits;
 }
