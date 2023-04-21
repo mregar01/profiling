@@ -46,7 +46,7 @@ all: um
 
 ## Linking step (.o -> executable program)
 
-um: driver.o basicInstructions.o IO.o memory.o
+um: driverNew.o
 	$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
 
 clean:

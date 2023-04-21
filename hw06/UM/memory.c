@@ -134,19 +134,19 @@ void segmentedLoad(uint32_t *registers, Seq_T segments, uint32_t word)
         unsigned hi = BLSB + WIDTH; /* one beyond the most significant bit */
 
         /* different type of right shift */
-        data.b = shr(shl(word, 64 - hi), 64 - WIDTH);
+        data.b = shr(shl(*curr, 64 - hi), 64 - WIDTH);
 
         hi = CLSB + WIDTH; /* one beyond the most significant bit */
 
         /* different type of right shift */
-        data.c = shr(shl(word, 64 - hi), 64 - WIDTH);
+        data.c = shr(shl(*curr, 64 - hi), 64 - WIDTH);
 
         hi = ALSB + WIDTH; /* one beyond the most significant bit */
 
 
 
         /* different type of right shift */
-        data.a = shr(shl(word, 64 - hi), 64 - WIDTH);
+        data.a = shr(shl(*curr, 64 - hi), 64 - WIDTH);
         // uint32_t *bval = Seq_get(registers, data.b);
         // uint32_t *cval = Seq_get(registers, data.c);
         uint32_t cval = registers[data.c];
@@ -181,20 +181,20 @@ void segmentedStore(uint32_t *registers, Seq_T segments, uint32_t word)
         struct values data;
 
         
-        unsigned hi = BLSB + WIDTH; /* one beyond the most significant bit */
+        unsigned hi = 3 + 3; /* one beyond the most significant bit */
 
         /* different type of right shift */
-        data.b = shr(shl(word, 64 - hi), 64 - WIDTH);
+        data.b = shr(shl(*curr, 64 - hi), 64 - 3);
 
-        hi = CLSB + WIDTH; /* one beyond the most significant bit */
-
-        /* different type of right shift */
-        data.c = shr(shl(word, 64 - hi), 64 - WIDTH);
-
-        hi = ALSB + WIDTH; /* one beyond the most significant bit */
+        hi = 0 + 3; /* one beyond the most significant bit */
 
         /* different type of right shift */
-        data.a = shr(shl(word, 64 - hi), 64 - WIDTH);
+        data.c = shr(shl(*curr, 64 - hi), 64 - 3);
+
+        hi = 6 + 3; /* one beyond the most significant bit */
+
+        /* different type of right shift */
+        data.a = shr(shl(*curr, 64 - hi), 64 - 3);
 
         uint32_t cval = registers[data.c];
         uint32_t bval = registers[data.b];
