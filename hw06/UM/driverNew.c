@@ -11,16 +11,27 @@
  *
  */
 
-#include "driver.h"
+// #include "driver.h"
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <seq.h>
+#include "bitpack.h"
 
 #define NUMREGISTERS 8
 #define NUMARGUMENTS 2
 
-/*enum that is used for opcodes*/
-typedef enum Um_opcode {
-        CMOV = 0, SLOAD, SSTORE, ADD, MUL, DIV,
-        NAND, HALT, ACTIVATE, INACTIVATE, OUT, IN, LOADP, LV
-} Um_opcode;
+struct segment {
+        bool mapped;
+        Seq_T words;
+};
+
+struct values {
+        uint32_t a;
+        uint32_t b;
+        uint32_t c;
+};
 
 
 int main(int argc, char *argv[]){
@@ -48,21 +59,21 @@ int main(int argc, char *argv[]){
 
         int c;
         int counter = 3;
-        uint32_t *curr = malloc(sizeof(uint32_t));
+        uint32_t *currVal = malloc(sizeof(uint32_t));
         while((c = getc(fp)) != -1) {
                 /*gets 8 bits at a time, then adds after 3 iterations*/
-                *curr = Bitpack_newu(*curr, 8, counter * 8, (uint64_t) c);
+                *currVal = Bitpack_newu(*currVal, 8, counter * 8, (uint64_t) c);
                 if (counter == 0) {
-                        Seq_addhi(initial, curr);
+                        Seq_addhi(initial, currVal);
                         counter = 3;
-                        curr = malloc(sizeof(uint32_t));
-                        *curr = 0;
+                        currVal = malloc(sizeof(uint32_t));
+                        *currVal = 0;
                 } else {
                         counter --;
                 }  
         }
         /*allocated one extra uint32_t because filelength is unknown*/
-        free(curr);
+        free(currVal);
         
         ///////
         struct segment *segmentZero = malloc(sizeof(struct segment));
@@ -76,232 +87,148 @@ int main(int argc, char *argv[]){
 
         Seq_T availability = Seq_new(0);
 
-        commandLoop(registers, segments, availability);
-        
-        /*frees all allocated memory*/
-        // freeSegments(segments);
-        int numsegments = Seq_length(segments);
-        
-        for (int i = 0; i < numsegments; i++) {
-                /*free overall segments*/
-                struct segment *curr = Seq_get(segments, i);
-                if (curr->mapped) {
-                        /*free each individual segments*/
-                        int segmentlength = Seq_length(curr->words);
-                        for (int j = 0; j < segmentlength; j++) {
-                                free(Seq_get(curr->words, j));
-                        }
-                
-                        Seq_free(&curr->words);
-                }
-                free(curr);
-
-        }
-        Seq_free(&segments);
-        //
-        free(registers);
-        // freeSequence(registers);
-        int size = Seq_length(availability);
-        for (int i = 0; i < size; i++) {
-                free(Seq_get(availability, i));
-        }
-        Seq_free(&availability);
-        // freeSequence(availability);
-        exit(0);
-}
+        // commandLoop(registers, segments, availability);
 
 
-/**********initializeRegisters********
- * initializes a sequence of registers to hold all 0's
- * Inputs: 
- * Return: sequence of registers
- * Expects: 
- * Notes: 
- ************************/
-// Seq_T initializeRegisters()
-// {
-//         uint32_t *curr;
-//         Seq_T registers = Seq_new(NUMREGISTERS);
-//         for (int i = 0; i < NUMREGISTERS; i++){
-//                 curr = malloc(sizeof(int32_t));
-//                 *curr = 0;
-//                 Seq_addhi(registers, curr);
-//         }
-//         return registers;
-        
-// }
-
-/**********printRegisters********
- * takes a sequence of registers and prints all values(used for testing)
- * Inputs: 
- *      - sequence of registers
- * Return: none
- * Expects: 
- * Notes: THIS WAS USED FOR TESTING, COMMENTED OUT NOW
- ************************/
-// void printRegisters(Seq_T sequence) 
-// {
-//         for (int i = 0; i < NUMREGISTERS; i++) {
-//                 uint32_t *curr = Seq_get(sequence, i);
-//                 printf("$r[%d]: %d\n", i, *curr);
-//         }    
-// }
-
-
-/**********freeSequence********
- * frees all memory allocated in a Sequence
- * Inputs: 
- *      - Seq_T
- * Return: none
- * Expects: 
- * Notes: 
- ************************/
-// void freeSequence(Seq_T sequence)
-// {
-//         int size = Seq_length(sequence);
-//         for (int i = 0; i < size; i++) {
-//                 free(Seq_get(sequence, i));
-//         }
-//         Seq_free(&sequence);
-// }
-
-
-/**********commandLoop********
- * main driver for the program. Continuosly processes input words from segment
- * zero and calls helper functions based on OPCODEs
- * Inputs: 
- *      - sequence of registers
- *      - sequence of segments
- *      - sequence of availability slots
- * Return: none
- * Expects: 
- * Notes: 
- ************************/
-void commandLoop(uint32_t *registers, Seq_T segments, Seq_T availability)
-{
         struct segment *zero = Seq_get(segments, 0);
         int size = Seq_length(zero->words);
-        uint32_t *curr;
+        uint64_t *curr;
         uint32_t opcode;
         for (int i = 0; i < size; i++) {
                 curr = Seq_get(zero->words, i);
                 /*unpack current opcode*/
                 // opcode = Bitpack_getu(*curr, 4, 28);
-                unsigned hi = 28 + 4; /* one beyond the most significant bit */
+                // unsigned hi = 32; /* one beyond the most significant bit */
 
                 /* different type of right shift */
-                opcode = shr(shl(*curr, 64 - hi), 64 - 4);
-                if (opcode == CMOV) {
-                        // conditionalMove(registers, *curr);
+                // opcode = shr(shl(*curr, 32), 60);
+                opcode = (*curr << 32) >> 60;
+                if (opcode == 0) {
                         struct values data;    
-                        unsigned hi = 6 + 3; /* one beyond the most significant bit */
                         /* different type of right shift */
-                        data.a = shr(shl(*curr, 64 - hi), 64 - 3);
-                        hi = 3 + 3; /* one beyond the most significant bit */
+                        // data.a = shr(shl(*curr, 55), 61);
+                        data.a = (*curr << 55) >> 61;
+                        
                         /* different type of right shift */
-                        data.b = shr(shl(*curr, 64 - hi), 64 - 3);
-                        hi = 0 + 3; /* one beyond the most significant bit */
+                        // data.b = shr(shl(*curr, 58), 61);
+                        data.b = (*curr << 58) >> 61;
+                        
                         /* different type of right shift */
-                        data.c = shr(shl(*curr, 64 - hi), 64 - 3);
-                        // uint32_t *cval = Seq_get(registers, data.c); 
+                        // data.c = shr(shl(*curr, 61), 61);
+                        data.c = (*curr << 61) >> 61;
+
+
                         uint32_t cval = registers[data.c];
-                        /* Checks if value in r[c] is 0 before executing move*/
                         if (cval != 0) {
-                                // *(uint32_t*) Seq_get(registers, data.a) = 
-                                //                 *(uint32_t*) Seq_get(registers, data.b);
                                 registers[data.a] = registers[data.b];
                         }
-                } else if (opcode == SLOAD) {
+                } else if (opcode == 1) {
                         // segmentedLoad(registers, segments, *curr);
                         struct values data;
-                        unsigned hi = 3 + 3; /* one beyond the most significant bit */
+                        // unsigned hi = 6; /* one beyond the most significant bit */
                         /* different type of right shift */
-                        data.b = shr(shl(*curr, 64 - hi), 64 - 3);
-                        hi = 0 + 3; /* one beyond the most significant bit */
+                        // data.b = shr(shl(*curr, 58), 61);
+                        data.b = (*curr << 58) >> 61;
+                        // hi = 0 + 3; /* one beyond the most significant bit */
                         /* different type of right shift */
-                        data.c = shr(shl(*curr, 64 - hi), 64 - 3);
-                        hi = 6 + 3; /* one beyond the most significant bit */
+                        // data.c = shr(shl(*curr, 61), 61);
+                        data.c = (*curr << 61) >> 61;
+                        // hi = 6 + 3; /* one beyond the most significant bit */
                         /* different type of right shift */
-                        data.a = shr(shl(*curr, 64 - hi), 64 - 3);
+                        // data.a = shr(shl(*curr, 55), 61);
+                        data.a = (*curr << 55) >> 61;
                         // uint32_t *bval = Seq_get(registers, data.b);
                         // uint32_t *cval = Seq_get(registers, data.c);
                         uint32_t cval = registers[data.c];
                         uint32_t bval = registers[data.b];
                         struct segment *currSegment = Seq_get(segments, bval);
                         registers[data.a] = *(uint32_t*) Seq_get(currSegment->words, cval);
-                } else if (opcode == SSTORE) {
+                } else if (opcode == 2) {
                         // segmentedStore(registers, segments, *curr);
                         struct values data;
-                        unsigned hi = 3 + 3; /* one beyond the most significant bit */
+                        // unsigned hi = 3 + 3; /* one beyond the most significant bit */
                         /* different type of right shift */
-                        data.b = shr(shl(*curr, 64 - hi), 64 - 3);
-                        hi = 0 + 3; /* one beyond the most significant bit */
+                        // data.b = shr(shl(*curr, 58), 61);
+                        data.b = (*curr << 58) >> 61;
+                        // hi = 0 + 3; /* one beyond the most significant bit */
                         /* different type of right shift */
-                        data.c = shr(shl(*curr, 64 - hi), 64 - 3);
-                        hi = 6 + 3; /* one beyond the most significant bit */
+                        // data.c = shr(shl(*curr, 61), 61);
+                        data.c = (*curr << 61) >> 61;
+                        // hi = 6 + 3; /* one beyond the most significant bit */
                         /* different type of right shift */
-                        data.a = shr(shl(*curr, 64 - hi), 64 - 3);
+                        // data.a = shr(shl(*curr, 55), 61);
+                        data.a = (*curr << 55) >> 61;
+
                         uint32_t cval = registers[data.c];
                         uint32_t bval = registers[data.b];
                         uint32_t aval = registers[data.a];
                         struct segment *currSegment = Seq_get(segments, aval);
                         /*assigns value in memory to $r[C]*/
                         *(uint32_t*) Seq_get(currSegment->words, bval) = cval;
-                } else if (opcode == ADD) {
+                } else if (opcode == 3) {
                         // addition(registers, *curr);
                         struct values data;    
-                        unsigned hi = 6 + 3; /* one beyond the most significant bit */
+                        // unsigned hi = 6 + 3; /* one beyond the most significant bit */
                         /* different type of right shift */
-                        data.a = shr(shl(*curr, 64 - hi), 64 - 3);
-                        hi = 3 + 3; /* one beyond the most significant bit */
+                        // data.a = shr(shl(*curr, 55), 61);
+                        data.a = (*curr << 55) >> 61;
+                        // hi = 3 + 3; /* one beyond the most significant bit */
                         /* different type of right shift */
-                        data.b = shr(shl(*curr, 64 - hi), 64 - 3);
-                        hi = 0 + 3; /* one beyond the most significant bit */
+                        // data.b = shr(shl(*curr, 58), 61);
+                        data.b = (*curr << 58) >> 61;
+                        // hi = 0 + 3; /* one beyond the most significant bit */
                         /* different type of right shift */
-                        data.c = shr(shl(*curr, 64 - hi), 64 - 3);
+                        // data.c = shr(shl(*curr, 61), 61);
+                        data.c = (*curr << 61) >> 61;
                         uint32_t cval = registers[data.c];
                         uint32_t bval = registers[data.b];
                         /* Adds values in two registers */
                         uint32_t result = (bval + cval) % 4294967296;
                         // *(uint32_t*) Seq_get(registers, data.a) = result;
                         registers[data.a] = result;
-                } else if (opcode == MUL) {
+                } else if (opcode == 4) {
                         // multiplication(registers, *curr);
                         struct values data;    
-                        unsigned hi = 6 + 3; /* one beyond the most significant bit */
+                        // unsigned hi = 6 + 3; /* one beyond the most significant bit */
                         /* different type of right shift */
-                        data.a = shr(shl(*curr, 64 - hi), 64 - 3);
-                        hi = 3 + 3; /* one beyond the most significant bit */
+                        // data.a = shr(shl(*curr, 55), 61);
+                        data.a = (*curr << 55) >> 61;
+                        // hi = 3 + 3; /* one beyond the most significant bit */
                         /* different type of right shift */
-                        data.b = shr(shl(*curr, 64 - hi), 64 - 3);
-                        hi = 0 + 3; /* one beyond the most significant bit */
+                        // data.b = shr(shl(*curr, 58), 61);
+                        data.b = (*curr << 58) >> 61;
+                        // hi = 0 + 3; /* one beyond the most significant bit */
                         /* different type of right shift */
-                        data.c = shr(shl(*curr, 64 - hi), 64 - 3);
+                        // data.c = shr(shl(*curr, 61), 61);
+                        data.c = (*curr << 61) >> 61;
                         uint32_t cval = registers[data.c];
                         uint32_t bval = registers[data.b];
                         /* Multiplies values in two registers */                      
                         uint32_t result = (bval * cval) % 4294967296;
                         // *(uint32_t*) Seq_get(registers, data.a) = result;
                         registers[data.a] = result;
-                } else if (opcode == DIV) {
+                } else if (opcode == 5) {
                         // division(registers, *curr);
 
                         struct values data;    
 
-                        unsigned hi = 6 + 3; /* one beyond the most significant bit */
+                        // unsigned hi = 6 + 3; /* one beyond the most significant bit */
 
                         /* different type of right shift */
-                        data.a = shr(shl(*curr, 64 - hi), 64 - 3);
+                        // data.a = shr(shl(*curr, 55), 61);
+                        data.a = (*curr << 55) >> 61;
 
-                        hi = 3 + 3; /* one beyond the most significant bit */
-
-                        /* different type of right shift */
-                        data.b = shr(shl(*curr, 64 - hi), 64 - 3);
-
-                        hi = 0 + 3; /* one beyond the most significant bit */
+                        // hi = 3 + 3; /* one beyond the most significant bit */
 
                         /* different type of right shift */
-                        data.c = shr(shl(*curr, 64 - hi), 64 - 3);
+                        // data.b = shr(shl(*curr, 58), 61);
+                        data.b = (*curr << 58) >> 61;
+
+                        // hi = 0 + 3; /* one beyond the most significant bit */
+
+                        /* different type of right shift */
+                        // data.c = shr(shl(*curr, 61), 61);
+                        data.c = (*curr << 61) >> 61;
 
                         uint32_t cval = registers[data.c];
                         uint32_t bval = registers[data.b];   
@@ -314,25 +241,28 @@ void commandLoop(uint32_t *registers, Seq_T segments, Seq_T availability)
 
                         registers[data.a] = result;
         
-                } else if (opcode == NAND) {
+                } else if (opcode == 6) {
                         // BitwiseNAND(registers, *curr);
     
                         struct values data;    
 
-                        unsigned hi = 6 + 3; /* one beyond the most significant bit */
+                        // unsigned hi = 6 + 3; /* one beyond the most significant bit */
 
                         /* different type of right shift */
-                        data.a = shr(shl(*curr, 64 - hi), 64 - 3);
+                        // data.a = shr(shl(*curr, 55), 61);
+                        data.a = (*curr << 55) >> 61;
 
-                        hi = 3 + 3; /* one beyond the most significant bit */
-
-                        /* different type of right shift */
-                        data.b = shr(shl(*curr, 64 - hi), 64 - 3);
-
-                        hi = 0 + 3; /* one beyond the most significant bit */
+                        // hi = 3 + 3; /* one beyond the most significant bit */
 
                         /* different type of right shift */
-                        data.c = shr(shl(*curr, 64 - hi), 64 - 3);     
+                        // data.b = shr(shl(*curr, 58), 61);
+                        data.b = (*curr << 58) >> 61;
+
+                        // hi = 0 + 3; /* one beyond the most significant bit */
+
+                        /* different type of right shift */
+                        // data.c = shr(shl(*curr, 61), 61);  
+                        data.c = (*curr << 61) >> 61;   
                         uint32_t cval = registers[data.c];
                         uint32_t bval = registers[data.b];               
                         
@@ -342,22 +272,21 @@ void commandLoop(uint32_t *registers, Seq_T segments, Seq_T availability)
                         // *(uint32_t*) Seq_get(registers, data.a) = result;
                         registers[data.a] = result;
                         
-                } else if (opcode == HALT) {
+                } else if (opcode == 7) {
                         break;
-                } else if (opcode == ACTIVATE) {
+                } else if (opcode == 8) {
                         // mapSegment(registers, segments, availability, *curr);
 
                         struct values data;
         
-                        unsigned hi = 3 + 3; /* one beyond the most significant bit */
                         /* different type of right shift */
-                        data.b = shr(shl(*curr, 64 - hi), 64 - 3);
+                        // data.b = shr(shl(*curr, 58), 61);
+                        data.b = (*curr << 58) >> 61;
 
-                        hi = 0 + 3; /* one beyond the most significant bit */
 
                         /* different type of right shift */
-                        data.c = shr(shl(*curr, 64 - hi), 64 - 3);
-
+                        // data.c = shr(shl(*curr, 61), 61);
+                        data.c = (*curr << 61) >> 61;
 
                         uint32_t cval = registers[data.c];
 
@@ -382,28 +311,21 @@ void commandLoop(uint32_t *registers, Seq_T segments, Seq_T availability)
                                 free(Seq_remlo(availability));
                                 struct segment *oldval = Seq_put(segments, index, newSegment);
                                 free(oldval);
-                                // *(uint32_t*) Seq_get(registers, data.b) = index;
                                 registers[data.b] = index;
                         }
                         else {
                                 /*if there is no unmapped spot*/
                                 Seq_addhi(segments, newSegment);
-                                // *(uint32_t*) Seq_get(registers, data.b) = 
-                                //                                 (Seq_length(segments) - 1);
 
                                 registers[data.b] = (Seq_length(segments) - 1);
                         }
                         
-                } else if (opcode == INACTIVATE) {
-                        // unmapSegment(registers, segments, availability, *curr);
-
-                        unsigned hi = 0 + 3; /* one beyond the most significant bit */
+                } else if (opcode == 9) {
 
                         /* different type of right shift */
-                        uint32_t clocation = shr(shl(*curr, 64 - hi), 64 - 3);
+                        uint32_t clocation = (*curr << 61) >> 61;
 
                         uint32_t cval = registers[clocation];
-                        // uint32_t bval = *registers[data.b];
                         struct segment *currSegment = Seq_get(segments, cval);
 
                         int segmentlength = Seq_length(currSegment->words);
@@ -422,19 +344,16 @@ void commandLoop(uint32_t *registers, Seq_T segments, Seq_T availability)
                         *slot = cval;
                         Seq_addhi(availability, slot);
                         
-                } else if (opcode == OUT) {
-                        // output(registers, *curr);
+                } else if (opcode == 10) {
 
-                        unsigned hi = 0 + 3; /* one beyond the most significant bit */
                         /* different type of right shift */
-                        int cval = shr(shl(*curr, 64 - hi), 64 - 3);
+                        // int cval = shr(shl(*curr, 61), 61);
+                        int cval = (*curr << 61) >> 61;
 
                         char c = registers[cval];
-                        assert(c > -1);
                         putchar(c);
 
-                } else if (opcode == IN) {
-                        // input(registers, *curr);
+                } else if (opcode == 11) {
 
                         char c = getchar();
 
@@ -442,26 +361,26 @@ void commandLoop(uint32_t *registers, Seq_T segments, Seq_T availability)
                                 c = ~0;
                         } 
 
-                        unsigned hi = 0 + 3; /* one beyond the most significant bit */
-                        assert(hi <= 64);
                         /* different type of right shift */
-                        int cval = shr(shl(*curr, 64 - hi), 64 - 3);
+                        // int cval = shr(shl(*curr, 61), 61);
+                        int cval = (*curr << 61) >> 61;
+
 
                         registers[cval] = c;
 
-                } else if (opcode == LOADP) {
+                } else if (opcode == 12) {
                         /*set program counter*/
-                        // i = loadProgram(registers, segments, *curr);
 
                         struct values data;
         
-                        unsigned hi = 3 + 3; /* one beyond the most significant bit */
                         /* different type of right shift */
-                        data.b = shr(shl(*curr, 64 - hi), 64 - 3);
+                        // data.b = shr(shl(*curr, 58), 61);
+                        data.b = (*curr << 58) >> 61;
 
-                        hi = 0 + 3; /* one beyond the most significant bit */
                         /* different type of right shift */
-                        data.c = shr(shl(*curr, 64 - hi), 64 - 3);
+                        // data.c = shr(shl(*curr, 61), 61);
+                        data.c = (*curr << 61) >> 61;
+
 
                   
                         uint32_t cval = registers[data.c];
@@ -498,42 +417,53 @@ void commandLoop(uint32_t *registers, Seq_T segments, Seq_T availability)
                         /*reset size for loop*/
                         size = Seq_length(zero->words);
                         
-                } else if (opcode == LV) {
-                        // loadValue(registers, *curr);
-                        unsigned hi = 25 + 3; /* one beyond the most significant bit */
+                } else if (opcode == 13) {
 
                         /* different type of right shift */
-                        uint32_t aval = shr(shl(*curr, 64 - hi), 64 - 3);
+                        // uint32_t aval = shr(shl(*curr, 36), 61);
+                        uint32_t aval = (*curr << 36) >> 61;
 
-                        hi = 0 + 25; /* one beyond the most significant bit */
 
                         /* different type of right shift */
-                        uint32_t loadval = shr(shl(*curr, 64 - hi), 64 - 25);
-
+                        // uint32_t loadval = shr(shl(*curr, 39), 39);
                         
-                        // *(uint32_t*) Seq_get(registers, aval) = loadval;
+                        uint32_t loadval = (*curr << 39) >> 39;
+                        
+                        
+                        
                         registers[aval] = loadval;
-                        }
+                }
         }
-}
 
-uint64_t shl(uint64_t word, unsigned bits)
-{
-        // assert(bits <= 64);
-        if (bits == 64)
-                return 0;
-        else
-                return word << bits;
-}
+        
+        /*frees all allocated memory*/
+        // freeSegments(segments);
+        int numsegments = Seq_length(segments);
+        
+        for (int i = 0; i < numsegments; i++) {
+                /*free overall segments*/
+                struct segment *curr = Seq_get(segments, i);
+                if (curr->mapped) {
+                        /*free each individual segments*/
+                        int segmentlength = Seq_length(curr->words);
+                        for (int j = 0; j < segmentlength; j++) {
+                                free(Seq_get(curr->words, j));
+                        }
+                
+                        Seq_free(&curr->words);
+                }
+                free(curr);
 
-/*
- * shift R logical
- */
-uint64_t shr(uint64_t word, unsigned bits)
-{
-        // assert(bits <= 64);
-        if (bits == 64)
-                return 0;
-        else
-                return word >> bits;
+        }
+        Seq_free(&segments);
+        //
+        free(registers);
+        // freeSequence(registers);
+        int Currsize = Seq_length(availability);
+        for (int i = 0; i < Currsize; i++) {
+                free(Seq_get(availability, i));
+        }
+        Seq_free(&availability);
+        // freeSequence(availability);
+        exit(0);
 }
