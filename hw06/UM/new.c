@@ -405,11 +405,12 @@ int main(int argc, char *argv[]){
                                 // int segmentlength = Seq_length(currSegment->words);
                                 // Seq_T newSegmentZero = Seq_new(segmentlength);
                                 // int segmentlength = sizeof(currSegment->words);
-                                uint32_t *newSegmentZero = malloc(sizeof(currSegment->words));
                                 int segmentlength = currSegment->words[0];
+
+                                uint32_t *newSegmentZero = malloc((segmentlength + 1) * sizeof(uint32_t));
                                 
                                 /*duplicates a segment*/
-                                for (int i = 0; i < segmentlength; i++) {
+                                for (int i = 0; i < segmentlength + 1; i++) {
                                         // uint32_t *currVal = malloc(sizeof(uint32_t));
                                         // *currVal = *(uint32_t*)Seq_get(currSegment->words, i);
                                         // Seq_addhi(newSegmentZero, currVal);
