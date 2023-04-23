@@ -18,13 +18,17 @@
 #include <assert.h>
 #include <seq.h>
 #include "bitpack.h"
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #define NUMREGISTERS 8
 #define NUMARGUMENTS 2
 
 struct segment {
         bool mapped;
-        Seq_T words;
+        // Seq_T words;
+        uint32_t *words;
 };
 
 struct values {
@@ -49,7 +53,7 @@ int main(int argc, char *argv[]){
         assert(fp != NULL);
         
         Seq_T segments = Seq_new(0);
-        Seq_T initial = Seq_new(0);
+        // Seq_T initial = Seq_new(0);
 
         /*takes in words from a file*/
 
@@ -58,21 +62,31 @@ int main(int argc, char *argv[]){
 
         int c;
         int counter = 3;
-        uint32_t *currVal = malloc(sizeof(uint32_t));
+        struct stat *statbuf = malloc(sizeof(struct stat));
+        stat(argv[1], statbuf);
+        int wordsize = statbuf->st_size;
+        free(statbuf);
+        // u-int32_t *currVal = malloc(sizeof(uint32_t));
+        uint32_t currVal = 0;
+        uint32_t* initial = malloc(wordsize + sizeof(uint32_t));
+        int index = 1;
         while((c = getc(fp)) != -1) {
                 /*gets 8 bits at a time, then adds after 3 iterations*/
-                *currVal = Bitpack_newu(*currVal, 8, counter * 8, (uint64_t) c);
+                currVal = Bitpack_newu(currVal, 8, counter * 8, (uint64_t) c);
                 if (counter == 0) {
-                        Seq_addhi(initial, currVal);
+                        // Seq_addhi(initial, currVal);
+                        initial[index] = currVal;
                         counter = 3;
-                        currVal = malloc(sizeof(uint32_t));
-                        *currVal = 0;
+                        // currVal = malloc(sizeof(uint32_t));
+                        currVal = 0;
+                        index++;
                 } else {
                         counter --;
                 }  
         }
+        initial[0] = index - 1;
         /*allocated one extra uint32_t because filelength is unknown*/
-        free(currVal);
+        // free(currVal);
         
         ///////
         struct segment *segmentZero = malloc(sizeof(struct segment));
@@ -90,31 +104,30 @@ int main(int argc, char *argv[]){
 
 
         struct segment *zero = Seq_get(segments, 0);
-        int size = Seq_length(zero->words);
-        uint64_t *curr;
+        // int size = Seq_length(zero->words);
+        int size = initial[0];
+        // fprintf(stderr, "size: %d\n", size);
+        uint64_t curr;
         uint32_t opcode;
-        for (int i = 0; i < size; i++) {
-                curr = Seq_get(zero->words, i);
-                /*unpack current opcode*/
-                // opcode = Bitpack_getu(*curr, 4, 28);
-                // unsigned hi = 32; /* one beyond the most significant bit */
-
-                /* different type of right shift */
-                // opcode = shr(shl(*curr, 32), 60);
-                opcode = (*curr << 32) >> 60;
+        for (int i = 1; i < size + 1; i++) {
+                // curr = Seq_get(zero->words, i);
+                curr = zero->words[i];
+                // printf("curr: %lx\n", curr);
+                
+                opcode = (curr << 32) >> 60;
                 if (opcode == 0) {
                         struct values data;    
                         /* different type of right shift */
                         // data.a = shr(shl(*curr, 55), 61);
-                        data.a = (*curr << 55) >> 61;
+                        data.a = (curr << 55) >> 61;
                         
                         /* different type of right shift */
                         // data.b = shr(shl(*curr, 58), 61);
-                        data.b = (*curr << 58) >> 61;
+                        data.b = (curr << 58) >> 61;
                         
                         /* different type of right shift */
                         // data.c = shr(shl(*curr, 61), 61);
-                        data.c = (*curr << 61) >> 61;
+                        data.c = (curr << 61) >> 61;
 
 
                         uint32_t cval = registers[data.c];
@@ -127,58 +140,60 @@ int main(int argc, char *argv[]){
                         // unsigned hi = 6; /* one beyond the most significant bit */
                         /* different type of right shift */
                         // data.b = shr(shl(*curr, 58), 61);
-                        data.b = (*curr << 58) >> 61;
+                        data.b = (curr << 58) >> 61;
                         // hi = 0 + 3; /* one beyond the most significant bit */
                         /* different type of right shift */
                         // data.c = shr(shl(*curr, 61), 61);
-                        data.c = (*curr << 61) >> 61;
+                        data.c = (curr << 61) >> 61;
                         // hi = 6 + 3; /* one beyond the most significant bit */
                         /* different type of right shift */
                         // data.a = shr(shl(*curr, 55), 61);
-                        data.a = (*curr << 55) >> 61;
+                        data.a = (curr << 55) >> 61;
                         // uint32_t *bval = Seq_get(registers, data.b);
                         // uint32_t *cval = Seq_get(registers, data.c);
                         uint32_t cval = registers[data.c];
                         uint32_t bval = registers[data.b];
                         struct segment *currSegment = Seq_get(segments, bval);
-                        registers[data.a] = *(uint32_t*) Seq_get(currSegment->words, cval);
+                        // registers[data.a] = *(uint32_t*) Seq_get(currSegment->words, cval);
+                        registers[data.a] = currSegment->words[cval + 1];
                 } else if (opcode == 2) {
                         // segmentedStore(registers, segments, *curr);
                         struct values data;
                         // unsigned hi = 3 + 3; /* one beyond the most significant bit */
                         /* different type of right shift */
                         // data.b = shr(shl(*curr, 58), 61);
-                        data.b = (*curr << 58) >> 61;
+                        data.b = (curr << 58) >> 61;
                         // hi = 0 + 3; /* one beyond the most significant bit */
                         /* different type of right shift */
                         // data.c = shr(shl(*curr, 61), 61);
-                        data.c = (*curr << 61) >> 61;
+                        data.c = (curr << 61) >> 61;
                         // hi = 6 + 3; /* one beyond the most significant bit */
                         /* different type of right shift */
                         // data.a = shr(shl(*curr, 55), 61);
-                        data.a = (*curr << 55) >> 61;
+                        data.a = (curr << 55) >> 61;
 
                         uint32_t cval = registers[data.c];
                         uint32_t bval = registers[data.b];
                         uint32_t aval = registers[data.a];
                         struct segment *currSegment = Seq_get(segments, aval);
                         /*assigns value in memory to $r[C]*/
-                        *(uint32_t*) Seq_get(currSegment->words, bval) = cval;
+                        // *(uint32_t*) Seq_get(currSegment->words, bval) = cval;
+                        currSegment->words[bval + 1] = cval;
                 } else if (opcode == 3) {
                         // addition(registers, *curr);
                         struct values data;    
                         // unsigned hi = 6 + 3; /* one beyond the most significant bit */
                         /* different type of right shift */
                         // data.a = shr(shl(*curr, 55), 61);
-                        data.a = (*curr << 55) >> 61;
+                        data.a = (curr << 55) >> 61;
                         // hi = 3 + 3; /* one beyond the most significant bit */
                         /* different type of right shift */
                         // data.b = shr(shl(*curr, 58), 61);
-                        data.b = (*curr << 58) >> 61;
+                        data.b = (curr << 58) >> 61;
                         // hi = 0 + 3; /* one beyond the most significant bit */
                         /* different type of right shift */
                         // data.c = shr(shl(*curr, 61), 61);
-                        data.c = (*curr << 61) >> 61;
+                        data.c = (curr << 61) >> 61;
                         uint32_t cval = registers[data.c];
                         uint32_t bval = registers[data.b];
                         /* Adds values in two registers */
@@ -191,15 +206,15 @@ int main(int argc, char *argv[]){
                         // unsigned hi = 6 + 3; /* one beyond the most significant bit */
                         /* different type of right shift */
                         // data.a = shr(shl(*curr, 55), 61);
-                        data.a = (*curr << 55) >> 61;
+                        data.a = (curr << 55) >> 61;
                         // hi = 3 + 3; /* one beyond the most significant bit */
                         /* different type of right shift */
                         // data.b = shr(shl(*curr, 58), 61);
-                        data.b = (*curr << 58) >> 61;
+                        data.b = (curr << 58) >> 61;
                         // hi = 0 + 3; /* one beyond the most significant bit */
                         /* different type of right shift */
                         // data.c = shr(shl(*curr, 61), 61);
-                        data.c = (*curr << 61) >> 61;
+                        data.c = (curr << 61) >> 61;
                         uint32_t cval = registers[data.c];
                         uint32_t bval = registers[data.b];
                         /* Multiplies values in two registers */                      
@@ -215,19 +230,19 @@ int main(int argc, char *argv[]){
 
                         /* different type of right shift */
                         // data.a = shr(shl(*curr, 55), 61);
-                        data.a = (*curr << 55) >> 61;
+                        data.a = (curr << 55) >> 61;
 
                         // hi = 3 + 3; /* one beyond the most significant bit */
 
                         /* different type of right shift */
                         // data.b = shr(shl(*curr, 58), 61);
-                        data.b = (*curr << 58) >> 61;
+                        data.b = (curr << 58) >> 61;
 
                         // hi = 0 + 3; /* one beyond the most significant bit */
 
                         /* different type of right shift */
                         // data.c = shr(shl(*curr, 61), 61);
-                        data.c = (*curr << 61) >> 61;
+                        data.c = (curr << 61) >> 61;
 
                         uint32_t cval = registers[data.c];
                         uint32_t bval = registers[data.b];   
@@ -249,19 +264,19 @@ int main(int argc, char *argv[]){
 
                         /* different type of right shift */
                         // data.a = shr(shl(*curr, 55), 61);
-                        data.a = (*curr << 55) >> 61;
+                        data.a = (curr << 55) >> 61;
 
                         // hi = 3 + 3; /* one beyond the most significant bit */
 
                         /* different type of right shift */
                         // data.b = shr(shl(*curr, 58), 61);
-                        data.b = (*curr << 58) >> 61;
+                        data.b = (curr << 58) >> 61;
 
                         // hi = 0 + 3; /* one beyond the most significant bit */
 
                         /* different type of right shift */
                         // data.c = shr(shl(*curr, 61), 61);  
-                        data.c = (*curr << 61) >> 61;   
+                        data.c = (curr << 61) >> 61;   
                         uint32_t cval = registers[data.c];
                         uint32_t bval = registers[data.b];               
                         
@@ -280,23 +295,25 @@ int main(int argc, char *argv[]){
         
                         /* different type of right shift */
                         // data.b = shr(shl(*curr, 58), 61);
-                        data.b = (*curr << 58) >> 61;
+                        data.b = (curr << 58) >> 61;
 
 
                         /* different type of right shift */
                         // data.c = shr(shl(*curr, 61), 61);
-                        data.c = (*curr << 61) >> 61;
+                        data.c = (curr << 61) >> 61;
 
                         uint32_t cval = registers[data.c];
 
-                        Seq_T initial = Seq_new(cval);
+                        // Seq_T initial = Seq_new(cval);
+                        uint32_t *initial = calloc(cval + 1, sizeof(uint32_t));
+                        initial[0] = cval;
                         
                         /*makes a new empty segment*/
-                        for (uint32_t i = 0; i < cval; i++) {
-                                uint32_t *curr = malloc(sizeof(uint32_t));
-                                *curr = 0;
-                                Seq_addhi(initial, curr);
-                        }
+                        // for (uint32_t i = 0; i < cval; i++) {
+                        //         uint32_t *curr = malloc(sizeof(uint32_t));
+                        //         *curr = 0;
+                        //         Seq_addhi(initial, curr);
+                        // }
 
                         struct segment *newSegment = malloc(sizeof(struct segment));
                         newSegment->mapped = true;
@@ -321,19 +338,15 @@ int main(int argc, char *argv[]){
                         
                 } else if (opcode == 9) {
 
+                                                // fprintf(stderr, "in here\n");
+
                         /* different type of right shift */
-                        uint32_t clocation = (*curr << 61) >> 61;
+                        uint32_t clocation = (curr << 61) >> 61;
 
                         uint32_t cval = registers[clocation];
                         struct segment *currSegment = Seq_get(segments, cval);
 
-                        int segmentlength = Seq_length(currSegment->words);
-
-                        /*frees old segment*/
-                        for (int i = 0; i < segmentlength; i++) {
-                                free(Seq_get(currSegment->words, i));
-                        }
-                        Seq_free(&currSegment->words);
+                        free(currSegment->words);
 
                         currSegment->mapped = false;
                         currSegment->words = NULL;
@@ -347,7 +360,7 @@ int main(int argc, char *argv[]){
 
                         /* different type of right shift */
                         // int cval = shr(shl(*curr, 61), 61);
-                        int cval = (*curr << 61) >> 61;
+                        int cval = (curr << 61) >> 61;
 
                         char c = registers[cval];
                         putchar(c);
@@ -362,7 +375,7 @@ int main(int argc, char *argv[]){
 
                         /* different type of right shift */
                         // int cval = shr(shl(*curr, 61), 61);
-                        int cval = (*curr << 61) >> 61;
+                        int cval = (curr << 61) >> 61;
 
 
                         registers[cval] = c;
@@ -374,11 +387,11 @@ int main(int argc, char *argv[]){
         
                         /* different type of right shift */
                         // data.b = shr(shl(*curr, 58), 61);
-                        data.b = (*curr << 58) >> 61;
+                        data.b = (curr << 58) >> 61;
 
                         /* different type of right shift */
                         // data.c = shr(shl(*curr, 61), 61);
-                        data.c = (*curr << 61) >> 61;
+                        data.c = (curr << 61) >> 61;
 
 
                   
@@ -387,45 +400,52 @@ int main(int argc, char *argv[]){
                         
                         /*checks if it is just jumping within segment 0*/
                         if (bval != 0) {
+                                // fprintf(stderr, "in here\n");
                                 struct segment* currSegment = Seq_get(segments, bval);
-                                int segmentlength = Seq_length(currSegment->words);
-                                Seq_T newSegmentZero = Seq_new(segmentlength);
+                                // int segmentlength = Seq_length(currSegment->words);
+                                // Seq_T newSegmentZero = Seq_new(segmentlength);
+                                // int segmentlength = sizeof(currSegment->words);
+                                uint32_t *newSegmentZero = malloc(sizeof(currSegment->words));
+                                int segmentlength = currSegment->words[0];
                                 
                                 /*duplicates a segment*/
                                 for (int i = 0; i < segmentlength; i++) {
-                                        uint32_t *currVal = malloc(sizeof(uint32_t));
-                                        *currVal = *(uint32_t*)Seq_get(currSegment->words, i);
-                                        Seq_addhi(newSegmentZero, currVal);
+                                        // uint32_t *currVal = malloc(sizeof(uint32_t));
+                                        // *currVal = *(uint32_t*)Seq_get(currSegment->words, i);
+                                        // Seq_addhi(newSegmentZero, currVal);
+                                        newSegmentZero[i] = currSegment->words[i];
                                 }
 
                                 struct segment* oldZero = Seq_get(segments, 0);
-                                int oldZeroLength = (Seq_length(oldZero->words));
+                                // int oldZeroLength = (Seq_length(oldZero->words));
                                 /*frees old segment zero*/
-                                for (int i = 0; i < oldZeroLength; i++) {
-                                        free(Seq_get(oldZero->words, i));
-                                }
+                                // for (int i = 0; i < oldZeroLength; i++) {
+                                //         free(Seq_get(oldZero->words, i));
+                                // }
+                                free(oldZero->words);
 
                                 oldZero->words = newSegmentZero;
                         }
                         
-                        i = cval - 1;
+                        i = cval;
                         
                         /*reset segment zero*/
                         zero = Seq_get(segments, 0);
                         /*reset size for loop*/
-                        size = Seq_length(zero->words);
+                        size = zero->words[0];
+                        // fprintf(stderr, "new size: %d", size);
                         
                 } else if (opcode == 13) {
 
                         /* different type of right shift */
                         // uint32_t aval = shr(shl(*curr, 36), 61);
-                        uint32_t aval = (*curr << 36) >> 61;
+                        uint32_t aval = (curr << 36) >> 61;
 
 
                         /* different type of right shift */
                         // uint32_t loadval = shr(shl(*curr, 39), 39);
                         
-                        uint32_t loadval = (*curr << 39) >> 39;
+                        uint32_t loadval = (curr << 39) >> 39;
                         
                         
                         
@@ -443,12 +463,13 @@ int main(int argc, char *argv[]){
                 struct segment *curr = Seq_get(segments, i);
                 if (curr->mapped) {
                         /*free each individual segments*/
-                        int segmentlength = Seq_length(curr->words);
-                        for (int j = 0; j < segmentlength; j++) {
-                                free(Seq_get(curr->words, j));
-                        }
+                        // int segmentlength = Seq_length(curr->words);
+                        // for (int j = 0; j < segmentlength; j++) {
+                        //         free(Seq_get(curr->words, j));
+                        // }
                 
-                        Seq_free(&curr->words);
+                        // Seq_free(&curr->words);
+                        free(curr->words);
                 }
                 free(curr);
 
