@@ -92,13 +92,9 @@ int main(int argc, char *argv[]){
                 opcode = (curr << 32) >> 60;
                 if (opcode == 0) {
                         struct values data;    
-                        
                         data.a = (curr << 55) >> 61;
-                        
                         data.b = (curr << 58) >> 61;
-                        
                         data.c = (curr << 61) >> 61;
-
 
                         uint32_t cval = registers[data.c];
                         if (cval != 0) {
@@ -106,24 +102,18 @@ int main(int argc, char *argv[]){
                         }
                 } else if (opcode == 1) {
                         struct values data;
-                        
                         data.b = (curr << 58) >> 61;
-                        
                         data.c = (curr << 61) >> 61;
-                        
                         data.a = (curr << 55) >> 61;
-                        
+
                         uint32_t cval = registers[data.c];
                         uint32_t bval = registers[data.b];
                         struct segment *currSegment = Seq_get(segments, bval);
                         registers[data.a] = currSegment->words[cval + 1];
                 } else if (opcode == 2) {
                         struct values data;
-                        
                         data.b = (curr << 58) >> 61;
-                        
                         data.c = (curr << 61) >> 61;
-                        
                         data.a = (curr << 55) >> 61;
 
                         uint32_t cval = registers[data.c];
@@ -134,82 +124,60 @@ int main(int argc, char *argv[]){
                         currSegment->words[bval + 1] = cval;
                 } else if (opcode == 3) {
                         struct values data;    
-                        
                         data.a = (curr << 55) >> 61;
-                        
                         data.b = (curr << 58) >> 61;
-                        
                         data.c = (curr << 61) >> 61;
+
                         uint32_t cval = registers[data.c];
                         uint32_t bval = registers[data.b];
                         uint32_t result = (bval + cval) % 4294967296;
                         registers[data.a] = result;
                 } else if (opcode == 4) {
                         struct values data;    
-                        
                         data.a = (curr << 55) >> 61;
-                        
                         data.b = (curr << 58) >> 61;
-                        
                         data.c = (curr << 61) >> 61;
+
                         uint32_t cval = registers[data.c];
                         uint32_t bval = registers[data.b];
                         uint32_t result = (bval * cval) % 4294967296;
                         registers[data.a] = result;
                 } else if (opcode == 5) {
-
                         struct values data;    
-
                         data.a = (curr << 55) >> 61;
-
                         data.b = (curr << 58) >> 61;
-
                         data.c = (curr << 61) >> 61;
 
                         uint32_t cval = registers[data.c];
                         uint32_t bval = registers[data.b];   
 
                         assert(cval != 0);   
-            
                         uint32_t result = (bval / cval);
-
                         registers[data.a] = result;
-        
                 } else if (opcode == 6) {
-    
                         struct values data;    
-
                         data.a = (curr << 55) >> 61;
-
                         data.b = (curr << 58) >> 61;
-  
                         data.c = (curr << 61) >> 61;   
+
                         uint32_t cval = registers[data.c];
                         uint32_t bval = registers[data.b];               
-                        
                         uint32_t result = ~(bval & cval);
-
                         registers[data.a] = result;
-                        
                 } else if (opcode == 7) {
                         break;
                 } else if (opcode == 8) {
-
                         struct values data;
-
                         data.b = (curr << 58) >> 61;
-
                         data.c = (curr << 61) >> 61;
 
                         uint32_t cval = registers[data.c];
-
                         uint32_t *initial = calloc(cval + 1, sizeof(uint32_t));
                         initial[0] = cval;
 
                         struct segment *newSegment = malloc(sizeof(struct segment));
                         newSegment->mapped = true;
                         newSegment->words = initial;
-
 
                         /*checks where to map the new segment to*/
                         if (Seq_length(availability) != 0) {
@@ -241,9 +209,7 @@ int main(int argc, char *argv[]){
                         Seq_addhi(availability, slot);
                         
                 } else if (opcode == 10) {
-
                         int cval = (curr << 61) >> 61;
-
                         char c = registers[cval];
                         putchar(c);
 
@@ -260,7 +226,6 @@ int main(int argc, char *argv[]){
                 } else if (opcode == 12) {
                         struct values data;
                         data.b = (curr << 58) >> 61;
-
                         data.c = (curr << 61) >> 61;
 
                         uint32_t cval = registers[data.c];
