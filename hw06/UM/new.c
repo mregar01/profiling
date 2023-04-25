@@ -233,11 +233,11 @@ int main(int argc, char *argv[]){
                         
                         if (bval != 0) {
                                 struct segment* currSegment = Seq_get(segments, bval);
-                                int segmentlength = currSegment->words[0];
+                                int segmentlength = currSegment->words[0] + 1;
 
-                                uint32_t *newSegmentZero = malloc((segmentlength + 1) * sizeof(uint32_t));
+                                uint32_t *newSegmentZero = malloc((segmentlength) * sizeof(uint32_t));
                                 
-                                for (int i = 0; i < segmentlength + 1; i++) {
+                                for (int i = 0; i < segmentlength; i++) {
                                         newSegmentZero[i] = currSegment->words[i];
                                 }
 
